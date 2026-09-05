@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cookigram.com/contracts/1.0.0/provenance.schema.json",
+  "title": "CookiGram build provenance",
+  "type": "object",
+  "required": ["content_sha", "core_sha", "built_at"],
+  "additionalProperties": false,
+  "properties": {"content_sha": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "core_sha": {"type": "string", "minLength": 1}, "built_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T.*Z$"}}
+}

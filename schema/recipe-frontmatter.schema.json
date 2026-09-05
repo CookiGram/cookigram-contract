@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cookigram.com/contracts/1.0.0/recipe-frontmatter.schema.json",
+  "title": "CookiGram recipe frontmatter",
+  "type": "object",
+  "required": ["title", "portions", "prep_time", "total_time", "tags", "source", "author", "image", "image_credit", "scaling"],
+  "properties": {
+    "title": {"type": "string", "minLength": 1},
+    "portions": {"type": "integer", "minimum": 1},
+    "prep_time": {"type": "string", "minLength": 1},
+    "total_time": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "tags": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "source": {"type": "string", "minLength": 1},
+    "author": {"type": "string", "minLength": 1},
+    "image": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*\\\\).+$"},
+    "image_credit": {"type": "object", "required": ["author", "source", "license"], "properties": {"author": {"type": "string", "minLength": 1}, "source": {"type": "string", "minLength": 1}, "license": {"type": "string", "minLength": 1}, "license_url": {"type": "string"}, "modifications": {"type": "string"}}, "additionalProperties": true},
+    "scaling": {"type": "object", "required": ["enabled"], "properties": {"enabled": {"type": "boolean"}, "min_portions": {"type": "integer", "minimum": 1}, "max_portions": {"type": "integer", "minimum": 1}, "step": {"type": "integer", "minimum": 1}, "reason": {"type": "string", "minLength": 1}}, "additionalProperties": true},
+    "appliances": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string", "minLength": 1}}},
+    "required_equipment": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "spiciness": {"type": "integer", "minimum": 0, "maximum": 5},
+    "flavors": {"type": "object", "required": ["pairing", "notes"], "properties": {"pairing": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "notes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "harmony": {"type": "string"}, "tips": {"type": "string"}}, "additionalProperties": true},
+    "image_generation": {"type": "object", "additionalProperties": true}
+  },
+  "additionalProperties": true
+}

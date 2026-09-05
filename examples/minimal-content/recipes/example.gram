@@ -1,0 +1,22 @@
+---
+title: Exemple de recette
+portions: 2
+prep_time: 5 min
+total_time: 15 min
+description: Une recette minimale pour tester la frontière du contrat.
+tags:
+  - exemple
+source: https://example.test/recipe
+author: CookiGram
+image: images/placeholder.svg
+image_credit:
+  author: CookiGram
+  source: https://cookigram.com
+  license: MIT
+scaling:
+  enabled: false
+  reason: Fixture de validation du contrat.
+---
+
+[Préparer]
+- Mélanger les ingrédients jusqu'à obtenir une préparation homogène.
