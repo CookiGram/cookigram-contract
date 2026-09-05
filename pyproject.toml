@@ -7,7 +7,8 @@ name = "cookigram-contract"
 version = "1.0.0"
 description = "Public versioned content contract for CookiGram"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
+dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
@@ -17,3 +18,6 @@ cookigram-contract = "cookigram_contract.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["cookigram_contract*"]

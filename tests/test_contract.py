@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from cookigram_contract import parse_recipe, validate_recipe
 from cookigram_contract.contract import content_sha, validate_content, verify_output
 
 ROOT = Path(__file__).parents[1]
@@ -32,3 +33,44 @@ def test_verify_output_accepts_documented_minimum(tmp_path):
 def test_empty_content_requires_explicit_opt_in(tmp_path):
     assert validate_content(tmp_path)
     assert validate_content(tmp_path, allow_empty=True) == []
+
+
+def test_parse_recipe_supports_explicit_step_ids_and_mentions():
+    recipe = parse_recipe("""---
+title: Test
+portions: 2
+prep_time: 1 min
+total_time: 2 min
+tags: [test]
+source: test
+author: Test
+image: images/test.svg
+image_credit: {author: Test, source: test, license: MIT}
+scaling: {enabled: false}
+---
+[mix | Mélanger]
+- Ajouter @tomate{200 g} et @sel{1 pincée}.
+""")
+    assert recipe.steps[0].id == "mix"
+    assert recipe.steps[0].action == "Mélanger\nAjouter @tomate{200 g} et @sel{1 pincée}."
+    assert [(item.name, item.quantity) for item in recipe.steps[0].ingredients] == [("tomate", "200 g"), ("sel", "1 pincée")]
+    assert validate_recipe(recipe) == []
+
+
+def test_validation_errors_are_stable_and_structural():
+    errors = validate_recipe("---\ntitle:   \n---\n")
+    assert [(error.code, error.path) for error in errors] == [
+        ("field.required", "portions"),
+        ("field.required", "prep_time"),
+        ("field.required", "total_time"),
+        ("field.required", "tags"),
+        ("field.required", "source"),
+        ("field.required", "author"),
+        ("field.required", "image"),
+        ("field.required", "image_credit"),
+        ("field.required", "scaling"),
+        ("field.type", "title"),
+        ("field.type", "image_credit"),
+        ("field.type", "scaling.enabled"),
+        ("steps.empty", "steps"),
+    ]
