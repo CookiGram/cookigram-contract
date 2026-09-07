@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cookigram.com/contracts/1.0.0/recipe-frontmatter.schema.json",
+  "$id": "https://cookigram.com/contracts/1.1.0/recipe-frontmatter.schema.json",
   "title": "CookiGram recipe frontmatter",
   "type": "object",
   "required": ["title", "portions", "prep_time", "total_time", "tags", "source", "author", "image", "image_credit", "scaling"],
@@ -21,6 +21,17 @@
     "spiciness": {"type": "integer", "minimum": 0, "maximum": 5},
     "flavors": {"type": "object", "required": ["pairing", "notes"], "properties": {"pairing": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "notes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "harmony": {"type": "string"}, "tips": {"type": "string"}}, "additionalProperties": true},
     "image_generation": {"type": "object", "additionalProperties": true}
+    ,"meal": {
+      "type": "object",
+      "required": ["completeness"],
+      "properties": {
+        "completeness": {"enum": ["complete", "partial", "component"]},
+        "role": {"enum": ["main", "starch", "vegetable", "sauce"]},
+        "needs": {"type": "array", "uniqueItems": true, "items": {"enum": ["starch", "vegetable", "sauce"]}},
+        "benefits_from": {"type": "array"}
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": true
 }

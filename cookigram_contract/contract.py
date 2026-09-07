@@ -16,6 +16,10 @@ REQUIRED_FRONTMATTER = ("title", "portions", "prep_time", "total_time", "tags", 
 MENTION = re.compile(r"@(?P<name>[^@{}\n]+?)\{(?P<quantity>[^{}\n]+)\}")
 HEADING = re.compile(r"^\[(?P<header>[^\]]+)\]\s*$")
 STEP_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+CONTRACT_1_1 = re.compile(r"^1\.1\.\d+$")
+MEAL_COMPLETENESS = {"complete", "partial", "component"}
+MEAL_ROLES = {"main", "starch", "vegetable", "sauce"}
+MEAL_NEEDS = {"starch", "vegetable", "sauce"}
 
 
 @dataclass(frozen=True)
@@ -114,7 +118,7 @@ def parse_recipe(source: str | Path, *, source_name: str | None = None) -> Recip
     return Recipe(frontmatter, tuple(steps), source_name)
 
 
-def validate_recipe(recipe: Recipe | str | Path) -> list[ValidationError]:
+def validate_recipe(recipe: Recipe | str | Path, *, contract_version: str = "1.0.0") -> list[ValidationError]:
     """Return stable structural errors; an empty list means valid."""
     if not isinstance(recipe, Recipe):
         try:
@@ -157,6 +161,63 @@ def validate_recipe(recipe: Recipe | str | Path) -> list[ValidationError]:
         for mention in step.ingredients:
             if not mention.name or not mention.quantity:
                 errors.append(ValidationError("ingredient.mention", f"steps.{step.id}", "ingredient mentions require name and quantity", mention.line))
+    if isinstance(contract_version, str) and CONTRACT_1_1.fullmatch(contract_version):
+        errors.extend(_validate_meal(metadata))
+    return errors
+
+
+def _validate_meal(metadata: dict[str, Any]) -> list[ValidationError]:
+    if "meal" not in metadata:
+        return []
+    meal = metadata["meal"]
+    if not isinstance(meal, dict):
+        return [ValidationError("invalid_type", "meal", "must be a mapping")]
+    errors: list[ValidationError] = []
+    for field in meal:
+        if field not in {"completeness", "role", "needs", "benefits_from"}:
+            errors.append(ValidationError("forbidden", f"meal.{field}", "unknown meal field"))
+    completeness = meal.get("completeness")
+    if completeness is None:
+        errors.append(ValidationError("required", "meal.completeness", "required field is missing"))
+    elif not isinstance(completeness, str):
+        errors.append(ValidationError("invalid_type", "meal.completeness", "must be a string"))
+    elif completeness not in MEAL_COMPLETENESS:
+        errors.append(ValidationError("invalid_value", "meal.completeness", "unsupported completeness"))
+
+    role = meal.get("role")
+    if role is not None:
+        if not isinstance(role, str):
+            errors.append(ValidationError("invalid_type", "meal.role", "must be exactly one role"))
+        elif role not in MEAL_ROLES:
+            errors.append(ValidationError("invalid_value", "meal.role", "unsupported role"))
+
+    needs = meal.get("needs")
+    if needs is not None:
+        if not isinstance(needs, list):
+            errors.append(ValidationError("invalid_type", "meal.needs", "must be a list"))
+        else:
+            seen: list[Any] = []
+            for value in needs:
+                if value in seen:
+                    errors.append(ValidationError("duplicate", "meal.needs", "list entries must be unique"))
+                seen.append(value)
+                if not isinstance(value, str):
+                    errors.append(ValidationError("invalid_type", "meal.needs", "entries must be strings"))
+                elif value not in MEAL_NEEDS:
+                    errors.append(ValidationError("forbidden" if value == "main" else "invalid_value", "meal.needs", "unsupported relation target"))
+
+    if isinstance(completeness, str) and completeness in MEAL_COMPLETENESS:
+        needs_count = len(needs) if isinstance(needs, list) else None
+        if completeness in {"component", "partial"} and "role" not in meal:
+            errors.append(ValidationError("required", "meal.role", "exactly one role is required"))
+        if completeness == "component" and needs_count not in (None, 0):
+            errors.append(ValidationError("forbidden", "meal.needs", "component cannot declare needs"))
+        if completeness == "partial" and isinstance(needs, list) and needs_count == 0:
+            errors.append(ValidationError("required", "meal.needs", "partial requires at least one need"))
+        if completeness == "partial" and "needs" not in meal:
+            errors.append(ValidationError("required", "meal.needs", "partial requires at least one need"))
+        if completeness == "complete" and needs_count not in (None, 0):
+            errors.append(ValidationError("forbidden", "meal.needs", "complete cannot declare needs"))
     return errors
 
 

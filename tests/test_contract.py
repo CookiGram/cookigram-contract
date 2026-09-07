@@ -74,3 +74,55 @@ def test_validation_errors_are_stable_and_structural():
         ("field.type", "scaling.enabled"),
         ("steps.empty", "steps"),
     ]
+
+
+def _meal_recipe(meal: str) -> str:
+    return """---
+title: Meal
+portions: 2
+prep_time: 1 min
+total_time: 2 min
+tags: [test]
+source: test
+author: Test
+image: images/test.svg
+image_credit: {author: Test, source: test, license: MIT}
+scaling: {enabled: false}
+meal:
+%s---
+[step | Cook]
+- Cook it.
+""" % meal
+
+
+def test_meal_composition_forms_and_absence_are_valid():
+    assert validate_recipe(_meal_recipe("  completeness: invalid\n")) == []
+    assert [(error.code, error.path) for error in validate_recipe(_meal_recipe("  completeness: invalid\n"), contract_version="1.1.0") if error.path.startswith("meal")] == [("invalid_value", "meal.completeness")]
+    assert validate_recipe(_meal_recipe("  completeness: complete\n  role: main\n  needs: []\n")) == []
+    assert validate_recipe(_meal_recipe("  completeness: partial\n  role: sauce\n  needs: [vegetable]\n")) == []
+    assert validate_recipe(_meal_recipe("  completeness: component\n  role: starch\n")) == []
+    assert validate_recipe(_meal_recipe("  completeness: complete\n"), contract_version="1.1.0") == []
+    assert validate_recipe(_meal_recipe("").replace("meal:\n---", "---"), contract_version="1.1.0") == []
+
+
+def test_partial_requires_needs_when_pinned():
+    errors = validate_recipe(_meal_recipe("  completeness: partial\n  role: sauce\n"), contract_version="1.1.0")
+    assert [(error.code, error.path) for error in errors if error.path.startswith("meal")] == [("required", "meal.needs")]
+
+
+def test_meal_composition_rejects_structural_violations_with_stable_codes():
+    errors = validate_recipe(_meal_recipe("  completeness: partial\n  needs: [main, sauce, sauce]\n  extra: true\n"), contract_version="1.1.0")
+    assert sorted((error.code, error.path) for error in errors if error.path.startswith("meal")) == sorted([
+        ("forbidden", "meal.extra"),
+        ("required", "meal.role"),
+        ("duplicate", "meal.needs"),
+        ("forbidden", "meal.needs"),
+    ])
+    assert [(error.code, error.path) for error in validate_recipe(_meal_recipe("  completeness: component\n  role: main\n  needs: [sauce]\n"), contract_version="1.1.0") if error.path.startswith("meal")] == [("forbidden", "meal.needs")]
+    assert [(error.code, error.path) for error in validate_recipe(_meal_recipe("  completeness: complete\n  needs: [sauce]\n"), contract_version="1.1.0") if error.path.startswith("meal")] == [("forbidden", "meal.needs")]
+
+
+def test_legacy_benefits_from_is_tolerated_and_other_unknown_fields_are_not():
+    assert validate_recipe(_meal_recipe("  completeness: complete\n  benefits_from: [vegetable]\n"), contract_version="1.1.0") == []
+    errors = validate_recipe(_meal_recipe("  completeness: complete\n  future: true\n"), contract_version="1.1.0")
+    assert [(error.code, error.path) for error in errors if error.path.startswith("meal")] == [("forbidden", "meal.future")]
