@@ -1,4 +1,4 @@
-# Contrat CookiGram — version 1.0.0
+# Contrat CookiGram — version 1.1.0
 
 Ce document est normatif. « Doit » indique une obligation ; « peut » indique
 une capacité optionnelle. Le contrat porte sur la frontière contenu ↔ moteur,
@@ -76,3 +76,29 @@ fichiers d’entrée en ordre lexical, avec leur chemin relatif et leur contenu.
 Un moteur déclare la version de contrat qu’il accepte. Une version majeure
 différente est incompatible par défaut. Un moteur acceptant `1.x` doit ignorer
 les champs optionnels inconnus et refuser toute absence de champ obligatoire.
+
+### 5.1 Meal Composition (1.1.x opt-in)
+
+`1.0.0` conserve son comportement historique. La validation Meal Composition
+est activée uniquement lorsque le consommateur appelle `validate_recipe` avec
+`contract_version="1.1.x"`; le paramètre vaut `1.0.0` par défaut.
+L’absence de `meal` est valide et signifie `unknown`; aucune information du
+titre, des ingrédients, des tags, de la nutrition ou du texte libre n’est
+déduite.
+
+Un bloc `meal` contient `completeness` (`complete`, `partial`, `component`),
+un `role` optionnel ou requis selon la forme, et `needs` optionnel. Les rôles
+sont `main`, `starch`, `vegetable`, `sauce`; les cibles de `needs` sont
+`starch`, `vegetable` et `sauce`, donc jamais `main`. Les listes ne contiennent
+pas de doublons et les listes vides sont équivalentes à l’absence.
+
+- `component` exige exactement un rôle et aucun besoin ;
+- `partial` exige exactement un rôle et au moins un besoin ;
+- `complete` autorise un rôle informatif, mais aucun besoin.
+
+Tout champ `meal` inconnu est rejeté, sauf `benefits_from`, toléré uniquement
+pour compatibilité avec des annotations héritées et ignoré sans sémantique.
+Il n’y a ni migration automatique ni négociation dynamique de capacités.
+
+Les erreurs exposent uniquement un code stable (`invalid_type`, `invalid_value`,
+`required`, `duplicate`, `forbidden`) et un chemin de champ.

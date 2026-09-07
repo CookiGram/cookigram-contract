@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cookigram-contract"
-version = "1.0.0"
+version = "1.1.0"
 description = "Public versioned content contract for CookiGram"
 requires-python = ">=3.11"
 license = "MIT"
