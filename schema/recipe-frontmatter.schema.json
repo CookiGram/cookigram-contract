@@ -28,7 +28,7 @@
         "completeness": {"enum": ["complete", "partial", "component"]},
         "role": {"enum": ["main", "starch", "vegetable", "sauce"]},
         "needs": {"type": "array", "uniqueItems": true, "items": {"enum": ["starch", "vegetable", "sauce"]}},
-        "benefits_from": {"type": "array"}
+        "benefits_from": {}
       },
       "additionalProperties": false
     }

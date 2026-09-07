@@ -210,6 +210,8 @@ def _validate_meal(metadata: dict[str, Any]) -> list[ValidationError]:
         needs_count = len(needs) if isinstance(needs, list) else None
         if completeness in {"component", "partial"} and "role" not in meal:
             errors.append(ValidationError("required", "meal.role", "exactly one role is required"))
+        if completeness == "component" and role == "main":
+            errors.append(ValidationError("forbidden", "meal.role", "component cannot use main role"))
         if completeness == "component" and needs_count not in (None, 0):
             errors.append(ValidationError("forbidden", "meal.needs", "component cannot declare needs"))
         if completeness == "partial" and isinstance(needs, list) and needs_count == 0:
