@@ -207,7 +207,6 @@ def _validate_meal(metadata: dict[str, Any]) -> list[ValidationError]:
                     errors.append(ValidationError("forbidden" if value == "main" else "invalid_value", "meal.needs", "unsupported relation target"))
 
     if isinstance(completeness, str) and completeness in MEAL_COMPLETENESS:
-        has_role = isinstance(role, str) and role in MEAL_ROLES
         needs_count = len(needs) if isinstance(needs, list) else None
         if completeness in {"component", "partial"} and "role" not in meal:
             errors.append(ValidationError("required", "meal.role", "exactly one role is required"))

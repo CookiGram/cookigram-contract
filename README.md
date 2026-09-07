@@ -30,12 +30,9 @@ content/
 ```
 
 La version **1.0.0** reste le comportement générique historique. La version
-**1.1.0**, explicitement choisie par le consommateur via le paramètre
-`contract_version` de `validate_recipe`, ajoute la validation optionnelle du
-bloc `meal` pour une valeur `1.1.x`.
-Sans bloc `meal`, la qualification reste `unknown`; aucune inférence ni
-migration n'est effectuée. `benefits_from` est toléré uniquement comme champ
-hérité ignoré.
+**1.1.0** ajoute une validation Meal Composition opt-in via le paramètre
+`contract_version` de `validate_recipe`; ses règles normatives sont définies
+dans [`CONTRACT.md`](CONTRACT.md).
 
 Les versions suivent SemVer : toute modification incompatible des chemins, de
 la syntaxe Gram, des champs obligatoires ou des artefacts exige une version
